@@ -11,8 +11,7 @@ import (
 	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/core"
 
-    "github.com/pocketbase/dbx"
-
+	"github.com/pocketbase/dbx"
 )
 
 func main() {
@@ -47,10 +46,10 @@ func main() {
 					}
 					log.Println(element.ExpandedOne("book_id").Get("title"))
 				}
-				return c.JSON(http.StatusOK, map[string]interface{}{"message": "Hello " + userId, "books": records })
+				return c.JSON(http.StatusOK, map[string]interface{}{"message": "Hello " + userId, "books": records})
 			}
 
-			return nil
+			// return nil
 		})
 
 		return nil
@@ -62,4 +61,3 @@ func main() {
 	}
 
 }
-
