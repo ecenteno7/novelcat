@@ -7,8 +7,8 @@ import (
 	"populate-db/services"
 )
 
+// Print information about each book
 func printBookResultsInfo(books []models.Book) {
-	// Print information about each book
 	for _, book := range books {
 		fmt.Println("Title:", book.Title)
 		fmt.Println("Author:", book.Author)
@@ -27,7 +27,6 @@ func printBookResultsInfo(books []models.Book) {
 func main() {
 
 	data, err := services.FetchBookData()
-
 	if err != nil {
 		log.Fatal(err)
 	}

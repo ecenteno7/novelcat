@@ -12,6 +12,7 @@ import (
 	"populate-db/models"
 )
 
+// Fetches a list of book data from NYT Books API
 func FetchBookData() (models.APIResponse, error) {
 	err := godotenv.Load()
 	if err != nil {
