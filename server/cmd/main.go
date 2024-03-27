@@ -1,17 +1,16 @@
 package main
 
 import (
+	"booksapp/services"
 	"log"
-	// "fmt"
 	"net/http"
 	"os"
 
 	"github.com/labstack/echo/v5"
+	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase"
 	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/core"
-
-	"github.com/pocketbase/dbx"
 )
 
 func main() {
@@ -22,6 +21,7 @@ func main() {
 	app.OnBeforeServe().Add(func(e *core.ServeEvent) error {
 		e.Router.GET("/*", apis.StaticDirectoryHandler(os.DirFS("../../client/build"), false))
 
+		services.PopulateBooksInDB(app)
 		return nil
 	})
 

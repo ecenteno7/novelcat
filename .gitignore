@@ -31,3 +31,6 @@ dist/
 public/
 
 .env
+
+# Pocketbase
+pb_data/
