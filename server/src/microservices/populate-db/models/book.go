@@ -1,6 +1,6 @@
 package models
 
-// Define structs to represent the JSON structure
+// Book defined by NYT API response
 type Book struct {
 	Rank            int       `json:"rank"`
 	RankLastWeek    int       `json:"rank_last_week"`
@@ -20,6 +20,7 @@ type Book struct {
 	BuyLinks        []BuyLink `json:"buy_links"`
 }
 
+// BuyLink defined by NYT API response - gives a link to purchase book.
 type BuyLink struct {
 	Name string `json:"name"`
 	URL  string `json:"url"`
