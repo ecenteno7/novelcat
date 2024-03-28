@@ -14,6 +14,7 @@ type Book struct {
 	Title       string `db:"title" json:"title"`
 	AuthorID    int    `db:"author_id" json:"authorId"`
 	Description string `db:"description" json:"description"`
+	Author      string `json:"author"`
 	// Published   types.DateTime `db:"published" json:"published"`
 }
 

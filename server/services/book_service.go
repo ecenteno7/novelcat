@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	"booksapp/models"
 
@@ -45,11 +46,23 @@ func FetchBookData() (models.APIResponse, error) {
 	return response, err
 }
 
+// getFirstAndLastName accepts a full name string
+// and returns the first name and last name
+// as the first and second return values
+func getFirstAndLastName(fullname string) (string, string) {
+	// splitting the fullname single string by whitespace
+	names := strings.Split(fullname, " ")
+
+	return names[0], names[1]
+}
+
 // Print information about each book
 func printBookResultsInfo(books []models.Book) {
 	for _, book := range books {
 		fmt.Println("Title:", book.Title)
 		fmt.Println("Description:", book.Description)
+		firstName, lastName := getFirstAndLastName(book.Author)
+		fmt.Println("Author:", lastName, ", ", firstName)
 	}
 }
 
@@ -57,22 +70,49 @@ func printBookResultsInfo(books []models.Book) {
 func InsertBooks(db *pocketbase.PocketBase, books []models.Book) error {
 	// Iterate over books and save each one
 
-	collection, err := db.Dao().FindCollectionByNameOrId("books")
+	bookCollection, err := db.Dao().FindCollectionByNameOrId("books")
 	if err != nil {
 		return err
 	}
 
 	for _, book := range books {
-		record := pbModels.NewRecord(collection)
+
+		authorRecordId, err := InsertAuthor(db, book.Author)
+		if err != nil {
+			return err
+		}
+
+		record := pbModels.NewRecord(bookCollection)
 
 		record.Set("title", book.Title)
 		record.Set("description", book.Description)
+		record.Set("author_id", authorRecordId)
 
 		if err := db.Dao().SaveRecord(record); err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+func InsertAuthor(db *pocketbase.PocketBase, authorName string) (string, error) {
+	collection, err := db.Dao().FindCollectionByNameOrId("authors")
+	if err != nil {
+		return "", err
+	}
+
+	firstName, lastName := getFirstAndLastName(authorName)
+
+	record := pbModels.NewRecord(collection)
+
+	record.Set("last_name", lastName)
+	record.Set("first_name", firstName)
+
+	if err := db.Dao().SaveRecord(record); err != nil {
+		return "", err
+	}
+
+	return record.Id, nil
 }
 
 func PopulateBooksInDB(db *pocketbase.PocketBase) {
