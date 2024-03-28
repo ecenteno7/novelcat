@@ -10,7 +10,7 @@ import (
 	"github.com/pocketbase/pocketbase/core"
 )
 
-// RegisterBookRoutes registers book-related routes
+// RegisterBookRoutes registers book-related API routes
 func RegisterBookRoutes(e *core.ServeEvent, app *pocketbase.PocketBase) error {
 	e.Router.GET("/getBooksByUserId/:userId", func(c echo.Context) error {
 		userId := c.PathParam("userId")
