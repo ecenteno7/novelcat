@@ -39,4 +39,4 @@ jobs:
       
       - name: Start server
         run: |
-          ssh -o StrictHostKeyChecking=no root@${{ secrets.VM_IP_ADDR }} "cd /pb && ./pocketbase serve www.dev.mybooks.tech"
+          ssh -o StrictHostKeyChecking=no root@${{ secrets.VM_IP_ADDR }} "cd /pb && ./pocketbase serve www.dev.mybooks.tech &"
