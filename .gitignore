@@ -34,3 +34,6 @@ public/
 
 # Pocketbase
 build/
+ssh/
+
+*.DS_STORE
