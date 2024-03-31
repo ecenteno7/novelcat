@@ -33,5 +33,4 @@ public/
 .env
 
 # Pocketbase
-server/pb_data/*
 build/
