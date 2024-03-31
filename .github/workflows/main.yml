@@ -26,8 +26,9 @@ jobs:
       - name: Build code
         run: |
           cd ./server
-          ls
-          go build ./cmd/app/main.go
+          mkdir ../build
+          go build -o ../build/pocketbase ./cmd/app
+          cp -r pb_data ../build/
           
 
       - name: Deploy code
