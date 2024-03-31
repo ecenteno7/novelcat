@@ -36,8 +36,9 @@ jobs:
           scp -o StrictHostKeyChecking=no build.tar.gz root@${{ secrets.VM_IP_ADDR }}:/pb/build.tar.gz
           ssh -o StrictHostKeyChecking=no root@${{ secrets.VM_IP_ADDR }} "tar -xzvf /pb/build.tar.gz -C /pb"
 
-      - name: Start server
+      - name: Restart server
         run: |
+          ssh -o StrictHostKeyChecking=no root@${{ secrets.VM_IP_ADDR }} "pkill pocketbase || true"
           ssh -o StrictHostKeyChecking=no root@${{ secrets.VM_IP_ADDR }} "nohup /pb/pocketbase serve www.dev.mybooks.tech > /dev/null 2>&1 & disown"
 
   deploy_frontend:
