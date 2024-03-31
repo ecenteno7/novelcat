@@ -68,4 +68,4 @@ jobs:
         run: |
           tar -czvf client.tar.gz -C ./client/build .
           scp -o StrictHostKeyChecking=no client.tar.gz root@${{ secrets.VM_IP_ADDR }}:/pb/client.tar.gz
-          ssh -o StrictHostKeyChecking=no root@${{ secrets.VM_IP_ADDR }} "tar -xzvf /pb/client.tar.gz -C /pb/web"
+          ssh -o StrictHostKeyChecking=no root@${{ secrets.VM_IP_ADDR }} "mkdir -p /pb/web && tar -xzvf /pb/client.tar.gz -C /pb/web"
