@@ -33,6 +33,6 @@ jobs:
 
       - name: Deploy code
         run: |
-          tar -czvf build.tar.gz -C ../build .
+          tar -czvf build.tar.gz -C ./build .
           scp -o StrictHostKeyChecking=no build.tar.gz root@${{ secrets.VM_IP_ADDR }}:/pb/build.tar.gz
           ssh -o StrictHostKeyChecking=no root@${{ secrets.VM_IP_ADDR }} "tar -xzvf /pb/build.tar.gz -C /pb"
