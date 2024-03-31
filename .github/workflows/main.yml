@@ -25,8 +25,11 @@ jobs:
 
       - name: Build code
         run: |
-          cd ./server && go build ./cmd/app/main.go
+          cd ./server
+          ls
+          go build ./cmd/app/main.go
+          
 
       - name: Deploy code
         run: |
-          ssh root@${{ secrets.VM_IP_ADDR }} "cd /pb && git pull && go build && sudo systemctl restart your-service"
+          ssh root@${{ secrets.VM_IP_ADDR }} 
