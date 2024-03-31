@@ -1,0 +1,37 @@
+# Dependency directories
+/node_modules
+/.pnp
+.pnp.js
+package-lock.json
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+/.eslintcache
+
+# Optional REPL history
+.node_repl_history
+
+# Yarn integrity file
+.yarn-integrity
+
+# Parcel cache directory (https://parceljs.org/)
+.cache
+
+# Next.js build output
+.next/
+
+# Nuxt.js build / generate output
+.nuxt/
+dist/
+
+# Gatsby files
+.cache/
+public/
+
+.env
+
+# Pocketbase
+server/pb_data/*
+build/
