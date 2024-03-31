@@ -26,13 +26,13 @@ jobs:
       - name: Build code
         run: |
           cd ./server
-          mkdir ../build
+          mkdir -p ../build
           go build -o ../build/pocketbase ./cmd/app
           cp -r pb_data ../build/
-          echo -n "${{ secrets.ENV_FILE }}" > ../build/.env
+          echo "${{ secrets.ENV_FILE }}" > ../build/.env
 
       - name: Deploy code
         run: |
-          tar -czvf ../build.tar.gz ../build
-          scp ../build/build.tar.gz root@${{ secrets.VM_IP_ADDR }}:/pb/build.tar.gz
-          ssh root@${{ secrets.VM_IP_ADDR }} "tar -xzvf /pb/build.tar.gz -C /pb"
+          tar -czvf build.tar.gz -C ../build .
+          scp -o StrictHostKeyChecking=no build.tar.gz root@${{ secrets.VM_IP_ADDR }}:/pb/build.tar.gz
+          ssh -o StrictHostKeyChecking=no root@${{ secrets.VM_IP_ADDR }} "tar -xzvf /pb/build.tar.gz -C /pb"
