@@ -23,6 +23,10 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
+      - name: Build code
+        run: |
+          ls && go build
+
       - name: Deploy code
         run: |
           ssh root@${{ secrets.VM_IP_ADDR }} "cd /pb && git pull && go build && sudo systemctl restart your-service"
