@@ -30,15 +30,17 @@ jobs:
           cp -r pb_data ../build/
           echo "${{ secrets.ENV_FILE }}" > ../build/.env
 
+      - name: Stop server
+        run: ssh -o StrictHostKeyChecking=no root@${{ secrets.VM_IP_ADDR }} "pkill pocketbase || true"
+
       - name: Deploy code
         run: |
           tar -czvf build.tar.gz -C ./build .
           scp -o StrictHostKeyChecking=no build.tar.gz root@${{ secrets.VM_IP_ADDR }}:/pb/build.tar.gz
           ssh -o StrictHostKeyChecking=no root@${{ secrets.VM_IP_ADDR }} "rm -rf /pb/pb_data && tar -xzvf /pb/build.tar.gz -C /pb"
 
-      - name: Restart server
+      - name: Start the server
         run: |
-          ssh -o StrictHostKeyChecking=no root@${{ secrets.VM_IP_ADDR }} "pkill pocketbase || true"
           ssh -o StrictHostKeyChecking=no root@${{ secrets.VM_IP_ADDR }} "cd /pb && nohup ./pocketbase serve www.dev.mybooks.tech > /dev/null 2>&1 & disown"
 
   deploy_frontend:
