@@ -42,8 +42,8 @@ jobs:
 
       - name: Start server
         run: |
-          ssh -o StrictHostKeyChecking=no root@${{ secrets.VM_IP_ADDR }} "cd /pb && ./pocketbase serve www.dev.mybooks.tech &"
-
+          ssh -o StrictHostKeyChecking=no root@${{ secrets.VM_IP_ADDR }} "nohup /pb/pocketbase serve www.dev.mybooks.tech > /dev/null 2>&1 & disown"
+          
   deploy_frontend:
     needs: setup
     runs-on: ubuntu-latest
