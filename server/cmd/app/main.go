@@ -4,8 +4,10 @@ import (
 	"booksapp/internal/routes"
 	"booksapp/internal/services"
 	_ "embed"
+	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/pocketbase/pocketbase"
 	"github.com/pocketbase/pocketbase/apis"
@@ -21,7 +23,19 @@ func main() {
 	// Add middleware to serve static files from the provided public directory
 	app.OnBeforeServe().Add(func(e *core.ServeEvent) error {
 		// Serve webpage
-		e.Router.GET("/*", apis.StaticDirectoryHandler(os.DirFS("../../client/build"), false))
+		hostname, err := os.Hostname()
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		webPath := ""
+		if strings.Contains(hostname, ".local") {
+			webPath = "../client/build"
+		} else {
+			webPath = "/pb/web"
+		}
+		fmt.Printf("Webpath: %s", webPath)
+		e.Router.GET("/*", apis.StaticDirectoryHandler(os.DirFS(webPath), false))
 
 		// Register book routes
 		routes.RegisterBookRoutes(e, app)
