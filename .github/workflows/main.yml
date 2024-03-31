@@ -25,4 +25,4 @@ jobs:
 
       - name: Deploy code
         run: |
-          ssh user@${{ secrets.VM_IP_ADDR }} "cd /path/to/your/project && git pull && go build && sudo systemctl restart your-service"
+          ssh root@${{ secrets.VM_IP_ADDR }} "cd /pb && git pull && go build && sudo systemctl restart your-service"
