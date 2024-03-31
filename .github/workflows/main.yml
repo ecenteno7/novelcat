@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  setup:
+  deploy_backend:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -22,10 +22,6 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-  deploy_backend:
-    needs: setup
-    runs-on: ubuntu-latest
-    steps:
       - name: Build code
         run: |
           cd ./server
@@ -43,11 +39,24 @@ jobs:
       - name: Start server
         run: |
           ssh -o StrictHostKeyChecking=no root@${{ secrets.VM_IP_ADDR }} "nohup /pb/pocketbase serve www.dev.mybooks.tech > /dev/null 2>&1 & disown"
-          
+
   deploy_frontend:
-    needs: setup
+    needs: deploy_backend
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.22.1
+
+      - name: Install SSH key
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
       - name: Setup Node.js
         uses: actions/setup-node@v2
         with:
