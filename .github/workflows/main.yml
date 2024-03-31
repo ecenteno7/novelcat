@@ -30,8 +30,9 @@ jobs:
           go build -o ../build/pocketbase ./cmd/app
           cp -r pb_data ../build/
           cat "${{ secrets.ENV_FILE }}" > ../build/.env
-          
 
       - name: Deploy code
         run: |
-          ssh root@${{ secrets.VM_IP_ADDR }} 
+          tar -czvf ../build.tar.gz ../build
+          scp ../build/build.tar.gz root@${{ secrets.VM_IP_ADDR }}:/pb/build.tar.gz
+          ssh root@${{ secrets.VM_IP_ADDR }} "tar -xzvf /pb/build.tar.gz -C /pb"
