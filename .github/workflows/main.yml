@@ -6,9 +6,8 @@ on:
       - main
 
 jobs:
-  deploy:
+  setup:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -23,6 +22,10 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
+  deploy_backend:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
       - name: Build code
         run: |
           cd ./server
@@ -36,7 +39,28 @@ jobs:
           tar -czvf build.tar.gz -C ./build .
           scp -o StrictHostKeyChecking=no build.tar.gz root@${{ secrets.VM_IP_ADDR }}:/pb/build.tar.gz
           ssh -o StrictHostKeyChecking=no root@${{ secrets.VM_IP_ADDR }} "tar -xzvf /pb/build.tar.gz -C /pb"
-      
+
       - name: Start server
         run: |
           ssh -o StrictHostKeyChecking=no root@${{ secrets.VM_IP_ADDR }} "cd /pb && ./pocketbase serve www.dev.mybooks.tech &"
+
+  deploy_frontend:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      - name: Install and build client
+        run: |
+          cd ./client
+          npm ci
+          PUBLIC_URL=https://www.dev.mybooks.tech npm run build
+
+      - name: Deploy client
+        run: |
+          tar -czvf client.tar.gz -C ./client/build .
+          scp -o StrictHostKeyChecking=no client.tar.gz root@${{ secrets.VM_IP_ADDR }}:/pb/client.tar.gz
+          ssh -o StrictHostKeyChecking=no root@${{ secrets.VM_IP_ADDR }} "tar -xzvf /pb/client.tar.gz -C /pb/web"
