@@ -27,7 +27,6 @@ jobs:
           cd ./server
           mkdir -p ../build
           go build -o ../build/pocketbase ./cmd/app
-          cp -r pb_data ../build/
           echo "${{ secrets.ENV_FILE }}" > ../build/.env
 
       - name: Stop server
