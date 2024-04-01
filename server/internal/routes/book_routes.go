@@ -30,10 +30,12 @@ func RegisterBookRoutes(e *core.ServeEvent, app *pocketbase.PocketBase) error {
 			if errs := app.Dao().ExpandRecord(element, []string{"book_id", "bookshelf_type_id"}, nil); len(errs) > 0 {
 				log.Printf("failed to expand: %v", errs)
 			}
-			log.Println(element.ExpandedOne("book_id").Get("title"))
+			for _, record := range element.ExpandedAll("book_id") {
+				log.Println(record.Get("title"))
+			}
 		}
 
-		return c.JSON(http.StatusOK, map[string]interface{}{"message": "Hello " + userId, "books": records})
+		return c.JSON(http.StatusOK, map[string]interface{}{"message": "Returning records for user " + userId, "books": records})
 	})
 
 	return nil

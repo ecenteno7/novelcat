@@ -36,7 +36,7 @@ jobs:
         run: |
           tar -czvf build.tar.gz -C ./build .
           scp -o StrictHostKeyChecking=no build.tar.gz root@${{ secrets.VM_IP_ADDR }}:/pb/build.tar.gz
-          ssh -o StrictHostKeyChecking=no root@${{ secrets.VM_IP_ADDR }} "rm -rf /pb/pb_data && tar -xzvf /pb/build.tar.gz -C /pb"
+          ssh -o StrictHostKeyChecking=no root@${{ secrets.VM_IP_ADDR }} "find /pb -mindepth 1 ! -regex '^/pb/pb_data\\(/.*\\)?' -delete && tar -xzvf /pb/build.tar.gz -C /pb"
 
       - name: Start the server
         run: |
