@@ -120,6 +120,7 @@ func PopulateBooksInDB(db *pocketbase.PocketBase) error {
 	log.Printf("Starting populate books in db")
 	data, err := FetchBookData()
 	if err != nil {
+		db.Logger().Error("Error fetching book data from API")
 		return err
 	}
 
@@ -131,6 +132,7 @@ func PopulateBooksInDB(db *pocketbase.PocketBase) error {
 
 	// Insert fetched book data into the database
 	if err := InsertBooks(db, books); err != nil {
+		db.Logger().Error("Error inserting books into the database")
 		return err
 	}
 	return nil
