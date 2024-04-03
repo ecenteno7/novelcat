@@ -2,7 +2,6 @@ package main
 
 import (
 	"booksapp/internal/routes"
-	"booksapp/internal/services"
 	_ "embed"
 	"fmt"
 	"log"
@@ -40,7 +39,7 @@ func main() {
 		// Register book routes
 		routes.RegisterBookRoutes(e, app)
 
-		services.PopulateBooksInDB(app)
+		// services.PopulateBooksInDB(app)
 		return nil
 	})
 
