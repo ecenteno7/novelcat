@@ -39,7 +39,6 @@ func main() {
 		// Register book routes
 		routes.RegisterBookRoutes(e, app)
 
-		// services.PopulateBooksInDB(app)
 		return nil
 	})
 

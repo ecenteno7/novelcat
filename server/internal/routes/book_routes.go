@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"booksapp/internal/services"
 	"log"
 	"net/http"
 
@@ -36,6 +37,14 @@ func RegisterBookRoutes(e *core.ServeEvent, app *pocketbase.PocketBase) error {
 		}
 
 		return c.JSON(http.StatusOK, map[string]interface{}{"message": "Returning records for user " + userId, "books": records})
+	})
+
+	e.Router.GET("/seedDb", func(c echo.Context) error {
+		err := services.PopulateBooksInDB(app)
+		if err == nil {
+			return c.JSON(http.StatusOK, map[string]interface{}{"message": "DB seeded successfully"})
+		}
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"message": "Encountered error while seeding DB: " + err.Error()})
 	})
 
 	return nil
