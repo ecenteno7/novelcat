@@ -6,9 +6,9 @@ function App() {
     <div className="App">
       <header className="App-header">
         <img src={logo} className="App-logo" alt="logo" />
-        <h1>Welcome to the books app!</h1>
+        <h1>NOVEL CAT</h1>
         <p>
-          Edit <code>src/App.js</code> and save to reload.
+          Every book has a story.
         </p>
         <a
           className="App-link"
@@ -16,7 +16,7 @@ function App() {
           target="_blank"
           rel="noopener noreferrer"
         >
-          Learn React
+          Download the App
         </a>
       </header>
     </div>
