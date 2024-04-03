@@ -115,12 +115,12 @@ func InsertAuthor(db *pocketbase.PocketBase, authorName string) (string, error) 
 	return record.Id, nil
 }
 
-func PopulateBooksInDB(db *pocketbase.PocketBase) {
+func PopulateBooksInDB(db *pocketbase.PocketBase) error {
 	// Fetch book data from NYT API
 	log.Printf("Starting populate books in db")
 	data, err := FetchBookData()
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	// Extract books from API response
@@ -131,6 +131,7 @@ func PopulateBooksInDB(db *pocketbase.PocketBase) {
 
 	// Insert fetched book data into the database
 	if err := InsertBooks(db, books); err != nil {
-		log.Fatal(err)
+		return err
 	}
+	return nil
 }
