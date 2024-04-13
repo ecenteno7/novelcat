@@ -27,3 +27,11 @@ type Author struct {
 func (m *Book) TableName() string {
 	return "books" // the name of your collection
 }
+
+// APIResponse defined by NYT API response, list of books returned
+type APIResponse struct {
+	Status  string `json:"status"`
+	Results struct {
+		Books []Book
+	} `json:"results"`
+}

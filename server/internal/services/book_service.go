@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"booksapp/internal/models"
 
@@ -16,7 +17,8 @@ import (
 )
 
 // Fetches a list of book data from NYT Books API
-func FetchBookData() (models.APIResponse, error) {
+func FetchBookData(fetchDate string) (models.APIResponse, error) {
+	// 2008-07-01 - fetch date example
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
@@ -24,12 +26,15 @@ func FetchBookData() (models.APIResponse, error) {
 
 	nytBaseUrl := "https://api.nytimes.com/svc/books/v3"
 	nytApiKey := os.Getenv("NYT_API_KEY")
-
+	fmt.Printf("Date: %s\n", fetchDate)
 	requestURL := fmt.Sprintf(
-		"%s/lists/2008-07-01/hardcover-fiction.json?api-key=%s",
+		"%s/lists/%s/hardcover-fiction.json?api-key=%s",
 		nytBaseUrl,
+		fetchDate,
 		nytApiKey,
 	)
+
+	fmt.Printf("Request URL: %s\n", requestURL)
 
 	res, err := http.Get(requestURL)
 	if err != nil {
@@ -116,24 +121,31 @@ func InsertAuthor(db *pocketbase.PocketBase, authorName string) (string, error) 
 }
 
 func PopulateBooksInDB(db *pocketbase.PocketBase) error {
-	// Fetch book data from NYT API
-	log.Printf("Starting populate books in db")
-	data, err := FetchBookData()
-	if err != nil {
-		db.Logger().Error("Error fetching book data from API")
-		return err
+	// Fetch book data from NYT API for each month in between dates
+	start := time.Date(2008, time.July, 1, 0, 0, 0, 0, time.UTC)
+	today := time.Now()
+	end := time.Date(today.Year(), today.Month(), 1, 0, 0, 0, 0, time.UTC)
+
+	for date := start; date.Before(end); date = date.AddDate(0, 1, 0) {
+		fetchDate := date.Format("2006-01-02")
+		data, err := FetchBookData(fetchDate)
+		if err != nil {
+			log.Printf("Error fetching book data for date %s: %v", fetchDate, err)
+			continue
+		}
+
+		// Extract books from API response
+		books := data.Results.Books
+
+		// Print information about stored books
+		printBookResultsInfo(books)
+
+		// Insert fetched book data into the database
+		if err := InsertBooks(db, books); err != nil {
+			log.Printf("Error inserting books into the database for date %s: %v", fetchDate, err)
+			continue
+		}
 	}
 
-	// Extract books from API response
-	books := data.Results.Books
-
-	// Print information about stored books
-	printBookResultsInfo(books)
-
-	// Insert fetched book data into the database
-	if err := InsertBooks(db, books); err != nil {
-		db.Logger().Error("Error inserting books into the database")
-		return err
-	}
 	return nil
 }

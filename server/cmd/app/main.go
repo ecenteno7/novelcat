@@ -35,7 +35,7 @@ func main() {
 		}
 		fmt.Printf("Webpath: %s", webPath)
 		e.Router.GET("/*", apis.StaticDirectoryHandler(os.DirFS(webPath), false))
-
+    
 		// Register book routes
 		routes.RegisterBookRoutes(e, app)
 
