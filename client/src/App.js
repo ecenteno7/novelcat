@@ -21,7 +21,7 @@ function App() {
         >
           Download the App
         </a>
-        <button onClick={handleClick}>Seed Database</button>
+        {/*<button onClick={handleClick}>Seed Database</button>*/}
       </header>
     </div>
   );
