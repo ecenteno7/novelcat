@@ -12,7 +12,7 @@ type Book struct {
 	models.BaseModel
 
 	Title       string `db:"title" json:"title"`
-	AuthorID    int    `db:"author_id" json:"authorId"`
+	AuthorID    []string  `db:"author_id" json:"authorId"`
 	Description string `db:"description" json:"description"`
 	Author      string `json:"author"`
 	// Published   types.DateTime `db:"published" json:"published"`
@@ -26,4 +26,12 @@ type Author struct {
 
 func (m *Book) TableName() string {
 	return "books" // the name of your collection
+}
+
+// APIResponse defined by NYT API response, list of books returned
+type APIResponse struct {
+	Status  string `json:"status"`
+	Results struct {
+		Books []Book
+	} `json:"results"`
 }

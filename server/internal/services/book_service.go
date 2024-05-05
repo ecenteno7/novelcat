@@ -7,16 +7,20 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"booksapp/internal/models"
 
 	"github.com/joho/godotenv"
 	"github.com/pocketbase/pocketbase"
 	pbModels "github.com/pocketbase/pocketbase/models"
+  "github.com/pocketbase/dbx"
+  fp "github.com/amonsat/fullname_parser"
 )
 
 // Fetches a list of book data from NYT Books API
-func FetchBookData() (models.APIResponse, error) {
+func FetchBookList(fetchDate string, listName string) ([]models.Book, error) {
+	// 2008-07-01 - fetch date example
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
@@ -24,12 +28,16 @@ func FetchBookData() (models.APIResponse, error) {
 
 	nytBaseUrl := "https://api.nytimes.com/svc/books/v3"
 	nytApiKey := os.Getenv("NYT_API_KEY")
-
+	fmt.Printf("Date: %s\n", fetchDate)
 	requestURL := fmt.Sprintf(
-		"%s/lists/2008-07-01/hardcover-fiction.json?api-key=%s",
+		"%s/lists/%s/%s.json?api-key=%s",
 		nytBaseUrl,
+		fetchDate,
+    listName,
 		nytApiKey,
 	)
+
+	fmt.Printf("Request URL: %s\n", requestURL)
 
 	res, err := http.Get(requestURL)
 	if err != nil {
@@ -43,17 +51,20 @@ func FetchBookData() (models.APIResponse, error) {
 		log.Fatalf("Error parsing JSON: %v", err)
 	}
 
-	return response, err
+	return response.Results.Books, err
 }
 
 // getFirstAndLastName accepts a full name string
 // and returns the first name and last name
 // as the first and second return values
-func getFirstAndLastName(fullname string) (string, string) {
+func getFirstAndLastName(fullname string) (string, string, string) {
 	// splitting the fullname single string by whitespace
-	names := strings.Split(fullname, " ")
-
-	return names[0], names[1]
+	// names := strings.Split(fullname, " ")
+  parsedFullname := fp.ParseFullname(fullname)
+  first := parsedFullname.First
+  middle := parsedFullname.Middle
+  last := parsedFullname.Last
+	return last, first, middle
 }
 
 // Print information about each book
@@ -61,7 +72,7 @@ func printBookResultsInfo(books []models.Book) {
 	for _, book := range books {
 		fmt.Println("Title:", book.Title)
 		fmt.Println("Description:", book.Description)
-		firstName, lastName := getFirstAndLastName(book.Author)
+		firstName, lastName, _ := getFirstAndLastName(book.Author)
 		fmt.Println("Author:", lastName, ", ", firstName)
 	}
 }
@@ -76,11 +87,33 @@ func InsertBooks(db *pocketbase.PocketBase, books []models.Book) error {
 	}
 
 	for _, book := range books {
+    authorRecordId := []string{}
+    if strings.Contains(book.Author, "and") {
+      authors := strings.Split(book.Author, "and")
+      for _, author := range authors {
+        id, err := InsertAuthor(db, author)
+        if err != nil {
+          return err
+        }
+        authorRecordId = append(authorRecordId, id)
+      }
+    } else {
+		  id, err := InsertAuthor(db, book.Author)
+		  if err != nil {
+			  return err
+		  }
+      authorRecordId = append(authorRecordId, id)
+    }
 
-		authorRecordId, err := InsertAuthor(db, book.Author)
-		if err != nil {
-			return err
-		}
+    bookRecord, _ := db.Dao().FindFirstRecordByFilter(
+      "books", "title = {:title} && author_id = {:author_id}",
+      dbx.Params{ "title": book.Title, "author_id": authorRecordId[0] }, 
+    )
+    
+    if bookRecord != nil {
+      log.Printf("Book already exists in db: %s", book.Title)
+      return nil
+    }
 
 		record := pbModels.NewRecord(bookCollection)
 
@@ -101,12 +134,22 @@ func InsertAuthor(db *pocketbase.PocketBase, authorName string) (string, error) 
 		return "", err
 	}
 
-	firstName, lastName := getFirstAndLastName(authorName)
+	firstName, lastName, middleName := getFirstAndLastName(authorName)
 
-	record := pbModels.NewRecord(collection)
+  author, err := db.Dao().FindFirstRecordByFilter(
+    "authors", "last_name = {:lastName} && firstName = {:firstName}",
+    dbx.Params{ "lastName": lastName, "firstName": firstName},
+  )
+
+  if author != nil {
+    return author.Id, nil
+  }
+
+  record := pbModels.NewRecord(collection)
 
 	record.Set("last_name", lastName)
 	record.Set("first_name", firstName)
+  record.Set("middle_name", middleName)
 
 	if err := db.Dao().SaveRecord(record); err != nil {
 		return "", err
@@ -115,25 +158,42 @@ func InsertAuthor(db *pocketbase.PocketBase, authorName string) (string, error) 
 	return record.Id, nil
 }
 
+func fetchBooksBetweenDates(db *pocketbase.PocketBase, start time.Time, end time.Time, listName string) error {
+  
+	for date := start; date.Before(end); date = date.AddDate(0, 1, 0) {
+		fetchDate := date.Format("2006-01-02")
+		books, err := FetchBookList(fetchDate, listName)
+		if err != nil {
+			log.Printf("Error fetching book data for date %s: %v", fetchDate, err)
+			continue
+		}
+
+		// Print information about stored books
+		printBookResultsInfo(books)
+
+		// Insert fetched book data into the database
+		if err := InsertBooks(db, books); err != nil {
+			log.Printf("Error inserting books into the database for date %s: %v", fetchDate, err)
+			continue
+		}
+    time.Sleep(12 * time.Second)
+	}
+
+  return nil
+}
+
 func PopulateBooksInDB(db *pocketbase.PocketBase) error {
-	// Fetch book data from NYT API
-	log.Printf("Starting populate books in db")
-	data, err := FetchBookData()
-	if err != nil {
-		db.Logger().Error("Error fetching book data from API")
-		return err
-	}
+	// Fetch book data from NYT API for each month in between dates
+	start := time.Date(2008, time.July, 1, 0, 0, 0, 0, time.UTC)
+	today := time.Now()
+	end := time.Date(today.Year(), today.Month(), 1, 0, 0, 0, 0, time.UTC)
+  listName := "hardcover-fiction"
 
-	// Extract books from API response
-	books := data.Results.Books
-
-	// Print information about stored books
-	printBookResultsInfo(books)
-
-	// Insert fetched book data into the database
-	if err := InsertBooks(db, books); err != nil {
-		db.Logger().Error("Error inserting books into the database")
-		return err
-	}
+  err := fetchBooksBetweenDates(db, start, end, listName)
+	
+  if err != nil {
+    log.Printf("Error fetching %s books between dates %v %v", listName, start, end)
+  }
+  
 	return nil
 }

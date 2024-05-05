@@ -1,16 +1,8 @@
 import logo from './logo.svg';
 import './App.css';
+import { seedDb } from './services/bookApi';
 function handleClick() {
-  fetch('https://www.dev.mybooks.tech/seedDb')
-    .then(response => response.json())
-    .then(data => {
-      // Handle the response data here
-      console.log(data);
-    })
-    .catch(error => {
-      // Handle any errors that occur during the request
-      console.error(error);
-    });
+  seedDb();
 }
 function App() {
   return (
@@ -29,7 +21,7 @@ function App() {
         >
           Download the App
         </a>
-        <button onClick={handleClick}>Seed Database</button>
+        {/*<button onClick={handleClick}>Seed Database</button>*/}
       </header>
     </div>
   );
