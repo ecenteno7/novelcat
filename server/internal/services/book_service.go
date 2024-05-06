@@ -11,11 +11,11 @@ import (
 
 	"booksapp/internal/models"
 
+	fp "github.com/amonsat/fullname_parser"
 	"github.com/joho/godotenv"
+	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase"
 	pbModels "github.com/pocketbase/pocketbase/models"
-  "github.com/pocketbase/dbx"
-  fp "github.com/amonsat/fullname_parser"
 )
 
 // Fetches a list of book data from NYT Books API
@@ -33,7 +33,7 @@ func FetchBookList(fetchDate string, listName string) ([]models.Book, error) {
 		"%s/lists/%s/%s.json?api-key=%s",
 		nytBaseUrl,
 		fetchDate,
-    listName,
+		listName,
 		nytApiKey,
 	)
 
@@ -60,10 +60,10 @@ func FetchBookList(fetchDate string, listName string) ([]models.Book, error) {
 func getFirstAndLastName(fullname string) (string, string, string) {
 	// splitting the fullname single string by whitespace
 	// names := strings.Split(fullname, " ")
-  parsedFullname := fp.ParseFullname(fullname)
-  first := parsedFullname.First
-  middle := parsedFullname.Middle
-  last := parsedFullname.Last
+	parsedFullname := fp.ParseFullname(fullname)
+	first := parsedFullname.First
+	middle := parsedFullname.Middle
+	last := parsedFullname.Last
 	return last, first, middle
 }
 
@@ -87,33 +87,33 @@ func InsertBooks(db *pocketbase.PocketBase, books []models.Book) error {
 	}
 
 	for _, book := range books {
-    authorRecordId := []string{}
-    if strings.Contains(book.Author, "and") {
-      authors := strings.Split(book.Author, "and")
-      for _, author := range authors {
-        id, err := InsertAuthor(db, author)
-        if err != nil {
-          return err
-        }
-        authorRecordId = append(authorRecordId, id)
-      }
-    } else {
-		  id, err := InsertAuthor(db, book.Author)
-		  if err != nil {
-			  return err
-		  }
-      authorRecordId = append(authorRecordId, id)
-    }
+		authorRecordId := []string{}
+		if strings.Contains(book.Author, "and") {
+			authors := strings.Split(book.Author, "and")
+			for _, author := range authors {
+				id, err := InsertAuthor(db, author)
+				if err != nil {
+					return err
+				}
+				authorRecordId = append(authorRecordId, id)
+			}
+		} else {
+			id, err := InsertAuthor(db, book.Author)
+			if err != nil {
+				return err
+			}
+			authorRecordId = append(authorRecordId, id)
+		}
 
-    bookRecord, _ := db.Dao().FindFirstRecordByFilter(
-      "books", "title = {:title} && author_id = {:author_id}",
-      dbx.Params{ "title": book.Title, "author_id": authorRecordId[0] }, 
-    )
-    
-    if bookRecord != nil {
-      log.Printf("Book already exists in db: %s", book.Title)
-      return nil
-    }
+		bookRecord, _ := db.Dao().FindFirstRecordByFilter(
+			"books", "title = {:title} && author_id = {:author_id}",
+			dbx.Params{"title": book.Title, "author_id": authorRecordId[0]},
+		)
+
+		if bookRecord != nil {
+			log.Printf("Book already exists in db: %s", book.Title)
+			return nil
+		}
 
 		record := pbModels.NewRecord(bookCollection)
 
@@ -136,20 +136,20 @@ func InsertAuthor(db *pocketbase.PocketBase, authorName string) (string, error) 
 
 	firstName, lastName, middleName := getFirstAndLastName(authorName)
 
-  author, err := db.Dao().FindFirstRecordByFilter(
-    "authors", "last_name = {:lastName} && firstName = {:firstName}",
-    dbx.Params{ "lastName": lastName, "firstName": firstName},
-  )
+	author, err := db.Dao().FindFirstRecordByFilter(
+		"authors", "last_name = {:lastName} && firstName = {:firstName}",
+		dbx.Params{"lastName": lastName, "firstName": firstName},
+	)
 
-  if author != nil {
-    return author.Id, nil
-  }
+	if author != nil {
+		return author.Id, nil
+	}
 
-  record := pbModels.NewRecord(collection)
+	record := pbModels.NewRecord(collection)
 
 	record.Set("last_name", lastName)
 	record.Set("first_name", firstName)
-  record.Set("middle_name", middleName)
+	record.Set("middle_name", middleName)
 
 	if err := db.Dao().SaveRecord(record); err != nil {
 		return "", err
@@ -159,7 +159,7 @@ func InsertAuthor(db *pocketbase.PocketBase, authorName string) (string, error) 
 }
 
 func fetchBooksBetweenDates(db *pocketbase.PocketBase, start time.Time, end time.Time, listName string) error {
-  
+
 	for date := start; date.Before(end); date = date.AddDate(0, 1, 0) {
 		fetchDate := date.Format("2006-01-02")
 		books, err := FetchBookList(fetchDate, listName)
@@ -176,10 +176,10 @@ func fetchBooksBetweenDates(db *pocketbase.PocketBase, start time.Time, end time
 			log.Printf("Error inserting books into the database for date %s: %v", fetchDate, err)
 			continue
 		}
-    time.Sleep(12 * time.Second)
+		time.Sleep(12 * time.Second)
 	}
 
-  return nil
+	return nil
 }
 
 func PopulateBooksInDB(db *pocketbase.PocketBase) error {
@@ -187,13 +187,53 @@ func PopulateBooksInDB(db *pocketbase.PocketBase) error {
 	start := time.Date(2008, time.July, 1, 0, 0, 0, 0, time.UTC)
 	today := time.Now()
 	end := time.Date(today.Year(), today.Month(), 1, 0, 0, 0, 0, time.UTC)
-  listName := "hardcover-fiction"
+	listName := "hardcover-fiction"
 
-  err := fetchBooksBetweenDates(db, start, end, listName)
-	
-  if err != nil {
-    log.Printf("Error fetching %s books between dates %v %v", listName, start, end)
-  }
-  
+	err := fetchBooksBetweenDates(db, start, end, listName)
+
+	if err != nil {
+		log.Printf("Error fetching %s books between dates %v %v", listName, start, end)
+	}
+
+	return nil
+}
+
+func AddBookToUser(db *pocketbase.PocketBase, userId string, bookId string, bookshelf string) error {
+	log.Printf("Called addbooktouser %s %s", userId, bookId)
+
+	collection, err := db.Dao().FindCollectionByNameOrId("book_user")
+	if err != nil {
+		return err
+	}
+	record := pbModels.NewRecord(collection)
+
+	record.Set("user_id", userId)
+	record.Set("book_id", bookId)
+	record.Set("bookshelf", bookshelf)
+
+	if err := db.Dao().SaveRecord(record); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func CreateUser(db *pocketbase.PocketBase, username string, name string, email string, password string) error {
+
+	collection, err := db.Dao().FindCollectionByNameOrId("users")
+	if err != nil {
+		return err
+	}
+	record := pbModels.NewRecord(collection)
+
+	record.Set("username", username)
+	record.Set("name", name)
+	record.Set("email", email)
+	record.SetPassword(password)
+
+	if err := db.Dao().SaveRecord(record); err != nil {
+		return err
+	}
+
 	return nil
 }
