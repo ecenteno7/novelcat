@@ -1,6 +1,8 @@
 import logo from './logo.svg';
 import './App.css';
 import { seedDb } from './services/bookApi';
+import TextField from '@mui/material/TextField';
+
 function handleClick() {
   seedDb();
 }
@@ -13,17 +15,9 @@ function App() {
         <p>
           Every book has a story.
         </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Download the App
-        </a>
-        {/*<button onClick={handleClick}>Seed Database</button>*/}
+        <TextField id="standard-basic" label="Standard" variant="standard" />
       </header>
-    </div>
+    </div >
   );
 }
 
