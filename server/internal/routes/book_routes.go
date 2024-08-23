@@ -8,6 +8,7 @@ import (
 	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase"
+	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/core"
 )
 
@@ -45,6 +46,52 @@ func RegisterBookRoutes(e *core.ServeEvent, app *pocketbase.PocketBase) error {
 			return c.JSON(http.StatusOK, map[string]interface{}{"message": "DB seeded successfully"})
 		}
 		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"message": "Encountered error while seeding DB: " + err.Error()})
+	})
+
+	e.Router.POST("/addBookToUser", func(c echo.Context) error {
+		data := struct {
+			UserId    string `json:"userId"`
+			BookId    string `json:"bookId"`
+			Bookshelf string `json:"bookshelf"`
+		}{}
+		if err := c.Bind(&data); err != nil {
+			return apis.NewBadRequestError("Failed to read request data", err)
+		}
+
+		userId := data.UserId
+		bookId := data.BookId
+		bookshelf := data.Bookshelf
+
+		err := services.AddBookToUser(app, userId, bookId, bookshelf)
+		if err == nil {
+			return c.JSON(http.StatusOK, map[string]interface{}{"message": "Succesfully added book to user."})
+		}
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"message": "Encountered error in add book to user: " + err.Error()})
+	})
+
+	e.Router.POST("/addUser", func(c echo.Context) error {
+		data := struct {
+			Username string `json:"username" db:"username"`
+			Name     string `json:"name" db:"name"`
+			Email    string `json:"email" db:"email"`
+			Password string `json:"password" db:"password"`
+		}{}
+		if err := c.Bind(&data); err != nil {
+			return apis.NewBadRequestError("Failed to read request data", err)
+		}
+
+		username := data.Username
+		name := data.Name
+		email := data.Email
+		pwd := data.Password
+
+		err := services.CreateUser(app, username, name, email, pwd)
+		if err == nil {
+			return c.JSON(http.StatusOK, map[string]interface{}{"message": "Successfully added user to db."})
+		}
+
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"message": "Encountered error in add user to db: " + err.Error()})
+
 	})
 
 	return nil
